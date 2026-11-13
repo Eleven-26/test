@@ -5,23 +5,25 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sort"
+	"strings"
 
 	"test-server/controller"
 )
 
-func printEnv() {
-	envs := os.Environ()
-	sort.Strings(envs)
-	log.Printf("environment variables (%d):", len(envs))
-	for _, kv := range envs {
-		log.Printf("  %s", kv)
+// envMap 把进程环境变量摊平成 key → value，供 /health 在浏览器里直接查看。
+func envMap() map[string]string {
+	envs := make(map[string]string)
+	for _, kv := range os.Environ() {
+		k, v, ok := strings.Cut(kv, "=")
+		if !ok {
+			continue
+		}
+		envs[k] = v
 	}
+	return envs
 }
 
 func main() {
-	printEnv()
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "18080"
@@ -31,10 +33,11 @@ func main() {
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		host, _ := os.Hostname()
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok",
 			"source": controller.CONFIG_ORIGIN,
 			"host":   host,
+			"env":    envMap(),
 		})
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
