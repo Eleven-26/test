@@ -5,11 +5,23 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 
 	"test-server/controller"
 )
 
+func printEnv() {
+	envs := os.Environ()
+	sort.Strings(envs)
+	log.Printf("environment variables (%d):", len(envs))
+	for _, kv := range envs {
+		log.Printf("  %s", kv)
+	}
+}
+
 func main() {
+	printEnv()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "18080"
