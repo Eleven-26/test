@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	"test-server/controller"
 )
 
 // envMap 把进程环境变量摊平成 key → value，供 /health 在浏览器里直接查看。
@@ -35,7 +33,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok",
-			"source": controller.CONFIG_ORIGIN,
+			"source": "",
 			"host":   host,
 			"env":    envMap(),
 		})
