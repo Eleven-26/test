@@ -5,9 +5,21 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	"test-server/controller"
+	"strings"
 )
+
+// envMap 把进程环境变量摊平成 key → value，供 /health 在浏览器里直接查看。
+func envMap() map[string]string {
+	envs := make(map[string]string)
+	for _, kv := range os.Environ() {
+		k, v, ok := strings.Cut(kv, "=")
+		if !ok {
+			continue
+		}
+		envs[k] = v
+	}
+	return envs
+}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -19,10 +31,11 @@ func main() {
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		host, _ := os.Hostname()
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok",
-			"source": controller.CONFIG_ORIGIN,
+			"source": "",
 			"host":   host,
+			"env":    envMap(),
 		})
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
